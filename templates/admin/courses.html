@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Course Management - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Course Management</h1>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('admin.dashboard') }}">← Back to Dashboard</a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div>
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="margin-bottom: 1rem;">{{ message }}</div>
+            {% endfor %}    
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Create Course Form -->
+    <div class="card">
+        <h2>Create New Course</h2>
+        <form method="POST" action="{{ url_for('admin.create_course') }}">
+            <div style="margin-bottom: 15px;">
+                <div>
+                    <label>Course Name *:</label>
+                    <input type="text" name="name" style="width: 100%; padding: 8px; margin: 5px 0;" required>
+                </div>
+                <div>
+                    <label>Description:</label>
+                    <input type="text" name="description" style="width: 100%; padding: 8px; margin: 5px 0;" placeholder="Course description">
+                </div>
+            </div>
+            
+            <button type="submit" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Create Course</button>
+        </form>
+    </div>
+
+    <!-- Courses Table -->
+    <div class="card">
+        <h2>All Courses ({{ courses_with_stats|length }})</h2>
+        {% if courses_with_stats %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f3f4f6;">
+                    <th style="padding: 10px; text-align: left;">ID</th>
+                    <th style="padding: 10px; text-align: left;">Course Name</th>
+                    <th style="padding: 10px; text-align: left;">Description</th>
+                    <th style="padding: 10px; text-align: left;">Students</th>
+                    <th style="padding: 10px; text-align: left;">Has Teacher</th>
+                    <th style="padding: 10px; text-align: left;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course_data in courses_with_stats %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;">{{ course_data.course.id }}</td>
+                    <td style="padding: 10px;"><strong>{{ course_data.course.name }}</strong></td>
+                    <td style="padding: 10px;">{{ course_data.course.description or '-' }}</td>
+                    <td style="padding: 10px;">
+                        <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">
+                            {{ course_data.student_count }} students
+                        </span>
+                    </td>
+                    <td style="padding: 10px;">
+                        {% if course_data.has_teacher %}
+                            <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">Yes</span>
+                        {% else %}
+                            <span style="background: #6b7280; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">No</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">
+                        <div style="display: flex; gap: 5px;">
+                            <form method="POST" action="{{ url_for('admin.delete_course', course_id=course_data.course.id) }}" 
+                                  style="display: inline;" onsubmit="return confirm('Delete course {{ course_data.course.name }}?');">
+                                <button type="submit" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 3px; font-size: 12px;">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No courses found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

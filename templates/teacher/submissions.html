@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Submissions - {{ assignment.title }} - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 2rem;">
+        <div>
+            <h1>Submissions: {{ assignment.title }}</h1>
+            <p style="color: var(--gray);">
+                <strong>Course:</strong> 
+                {% if assignment.course %}
+                    {{ assignment.course.name }}
+                {% else %}
+                    Course #{{ assignment.course_id }}
+                {% endif %}
+                | <strong>Due:</strong> {{ assignment.due_date.strftime('%B %d, %Y') }}
+            </p>
+        </div>
+        <a href="{{ url_for('teacher.gradebook', course_id=assignment.course_id) }}" class="btn">
+            📊 View Gradebook
+        </a>
+    </div>
+
+    <!-- Assignment Statistics -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; color: var(--emerald);">{{ total_students }}</div>
+            <div>Total Students</div>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; color: var(--emerald);">{{ submitted_count }}</div>
+            <div>Submitted</div>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; color: var(--emerald);">{{ graded_count }}</div>
+            <div>Graded</div>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; color: var(--emerald);">{{ average_marks }}/{{ assignment.max_marks }}</div>
+            <div>Average</div>
+        </div>
+    </div>
+
+    {% if submissions %}
+    <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--gray-light);">
+                    <th style="padding: 1rem; text-align: left;">Student</th>
+                    <th style="padding: 1rem; text-align: left;">Submitted</th>
+                    <th style="padding: 1rem; text-align: left;">File</th>
+                    <th style="padding: 1rem; text-align: left;">Status</th>
+                    <th style="padding: 1rem; text-align: left;">Marks</th>
+                    <th style="padding: 1rem; text-align: left;">Percentage</th>
+                    <th style="padding: 1rem; text-align: left;">Grade & Feedback</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 1rem;">
+                        <strong>{{ submission.student.name }}</strong><br>
+                        <small style="color: var(--gray);">{{ submission.student.student_number }}</small>
+                    </td>
+                    <td style="padding: 1rem;">{{ submission.submitted_at.strftime('%m/%d %H:%M') }}</td>
+                    <td style="padding: 1rem;">
+                        {% if submission.file_path %}
+                        <a href="{{ url_for('teacher.download_submission', submission_id=submission.id) }}" class="btn" style="padding: 0.5rem 1rem;">
+                            📥 Download
+                        </a>
+                        {% else %}
+                        <span style="color: var(--gray);">No file</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if submission.status == 'graded' %}
+                        <span style="background: var(--emerald); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem;">
+                            ✅ Graded
+                        </span>
+                        {% else %}
+                        <span style="background: orange; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.8rem;">
+                            ⏳ Pending
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem; font-weight: 600;">
+                        {% if submission.marks is not none %}
+                            {{ "%.1f"|format(submission.marks) }}/{{ assignment.max_marks }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        {% if submission.marks is not none %}
+                            {{ "%.1f"|format((submission.marks / assignment.max_marks) * 100) }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">
+                        <form method="POST" action="{{ url_for('teacher.grade_submission', submission_id=submission.id) }}" 
+                              style="display: grid; gap: 0.5rem; min-width: 300px;">
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="number" name="marks" 
+                                       value="{{ submission.marks or '' }}" 
+                                       placeholder="Marks" 
+                                       min="0" max="{{ assignment.max_marks }}" 
+                                       step="0.1" 
+                                       style="flex: 1; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                <span style="color: var(--gray);">/ {{ assignment.max_marks }}</span>
+                            </div>
+                            <textarea name="feedback" 
+                                      placeholder="Provide feedback to student..." 
+                                      rows="2"
+                                      style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">{{ submission.feedback or '' }}</textarea>
+                            <button type="submit" class="btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                                {{ 'Update Grade' if submission.marks is not none else 'Grade Submission' }}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Submissions Yet</h3>
+        <p>No students have submitted this assignment yet.</p>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+        <a href="{{ url_for('teacher.assignments') }}" class="btn">← Back to Assignments</a>
+        <a href="{{ url_for('teacher.gradebook', course_id=assignment.course_id) }}" class="btn" style="background: var(--gray-light); color: var(--black);">
+            📊 View Course Gradebook
+        </a>
+    </div>
+</div>
+
+<style>
+input[type="number"] {
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+}
+
+input[type="number"]:focus {
+    border-color: var(--emerald);
+    outline: none;
+}
+
+textarea {
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+textarea:focus {
+    border-color: var(--emerald);
+    outline: none;
+}
+</style>
+{% endblock %}

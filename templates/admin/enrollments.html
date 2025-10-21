@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Enrollment Management - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Enrollment Management</h1>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('admin.dashboard') }}">← Back to Dashboard</a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+           
+        <div>
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="margin-bottom: 1rem;">{{ message }}</div>
+            {% endfor %}    
+            </div>S
+        {% endif %}
+    {% endwith %}
+
+    <!-- Enroll Student Form -->
+    <div class="card">
+        <h2>Enroll Student in Course</h2>
+        <form method="POST" action="{{ url_for('admin.enroll_student') }}">
+            <div style="margin-bottom: 15px;">
+                <div>
+                    <label>Student *:</label>
+                    <select name="student_id" style="width: 100%; padding: 8px; margin: 5px 0;" required>
+                        <option value="">Select Student</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.name }} ({{ student.student_number }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label>Course *:</label>
+                    <select name="course_id" style="width: 100%; padding: 8px; margin: 5px 0;" required>
+                        <option value="">Select Course</option>
+                        {% for course in courses %}
+                        <option value="{{ course.id }}">{{ course.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <button type="submit" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Enroll Student</button>
+        </form>
+    </div>
+
+    <!-- Enrollments Table -->
+    <div class="card">
+        <h2>All Enrollments ({{ enrollments|length }})</h2>
+        {% if enrollments %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f3f4f6;">
+                    <th style="padding: 10px; text-align: left;">ID</th>
+                    <th style="padding: 10px; text-align: left;">Student</th>
+                    <th style="padding: 10px; text-align: left;">Course</th>
+                    <th style="padding: 10px; text-align: left;">Enrolled Date</th>
+                    <th style="padding: 10px; text-align: left;">Status</th>
+                    <th style="padding: 10px; text-align: left;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for enrollment in enrollments %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;">{{ enrollment.id }}</td>
+                    <td style="padding: 10px;">
+                        {% set student = students|selectattr("id", "equalto", enrollment.user_id)|first %}
+                        {% if student %}
+                            <strong>{{ student.name }}</strong><br>
+                            <small style="color: #6b7280;">{{ student.student_number }}</small>
+                        {% else %}
+                            User #{{ enrollment.user_id }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">
+                        {% set course = courses|selectattr("id", "equalto", enrollment.course_id)|first %}
+                        {% if course %}
+                            <strong>{{ course.name }}</strong>
+                        {% else %}
+                            Course #{{ enrollment.course_id }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">{{ enrollment.enrolled_at.strftime('%m/%d/%Y') }}</td>
+                    <td style="padding: 10px;">
+                        {% if enrollment.status == 'active' %}
+                            <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">Active</span>
+                        {% else %}
+                            <span style="background: #6b7280; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">
+                        <form method="POST" action="{{ url_for('admin.drop_enrollment', enrollment_id=enrollment.id) }}" 
+                              style="display: inline;" onsubmit="return confirm('Drop this enrollment?');">
+                            <button type="submit" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 3px; font-size: 12px;">
+                                Drop
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No enrollments found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

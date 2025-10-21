@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, {{ current_user.name }}! System overview and management.</p>
+
+    <!-- Quick Stats -->
+    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; margin: 2rem 0;">
+        <div class="card" style="text-align: center;">
+            <h3 style="color: #10b981; font-size: 2rem; margin: 0;">{{ total_students }}</h3>
+            <p style="margin: 0;">Students</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <h3 style="color: #10b981; font-size: 2rem; margin: 0;">{{ total_teachers }}</h3>
+            <p style="margin: 0;">Teachers</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <h3 style="color: #10b981; font-size: 2rem; margin: 0;">{{ total_courses }}</h3>
+            <p style="margin: 0;">Courses</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <h3 style="color: #10b981; font-size: 2rem; margin: 0;">{{ total_assignments }}</h3>
+            <p style="margin: 0;">Assignments</p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <h3 style="color: #10b981; font-size: 2rem; margin: 0;">{{ total_submissions }}</h3>
+            <p style="margin: 0;">Submissions</p>
+        </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        
+        <!-- Left Column -->
+        <div>
+            <!-- Recent Users -->
+            <div class="card">
+                <h2>Recent Users</h2>
+                {% if recent_users %}
+                    <div style="display: grid; gap: 1rem;">
+                        {% for user in recent_users %}
+                        <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <h4 style="margin: 0 0 0.5rem 0; color: #059669;">
+                                        {{ user.name }}
+                                    </h4>
+                                    <p style="margin: 0; color: #6b7280;">
+                                        {% if user.student_number %}
+                                            #{{ user.student_number }}
+                                        {% elif user.username %}
+                                            @{{ user.username }}
+                                        {% endif %}
+                                    </p>
+                                    <small style="color: #6b7280;">
+                                        Joined {{ user.created_at.strftime('%m/%d/%Y') }}
+                                    </small>
+                                </div>
+                               
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No users found.</p>
+                {% endif %}
+            </div>
+
+           <!-- In the Quick Actions section, update the links: -->
+<!-- In the Quick Actions section, remove the Analytics link -->
+<div class="card">
+    <h2>Quick Actions</h2>
+    <div style="display: grid; gap: 0.5rem;">
+        <a href="{{ url_for('admin.user_management') }}" class="btn" style="text-align: center; background: #10b981; color: white; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; display: block;">
+            👥 Manage Users
+        </a>
+        <a href="{{ url_for('admin.course_management') }}" class="btn" style="text-align: center; background: #10b981; color: white; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; display: block;">
+            📚 Manage Courses
+        </a>
+        <a href="{{ url_for('admin.enrollment_management') }}" class="btn" style="text-align: center; background: #10b981; color: white; padding: 0.75rem 1rem; border-radius: 6px; text-decoration: none; display: block;">
+            🎓 Manage Enrollments
+        </a>
+        <!-- REMOVED ANALYTICS LINK -->
+    </div>
+</div>
+        <!-- Right Column -->
+        <div>
+            <!-- Recent Enrollments -->
+            <div class="card">
+                <h2>Recent Enrollments</h2>
+                {% if recent_enrollments %}
+                    <div style="display: grid; gap: 1rem;">
+                        {% for data in recent_enrollments %}
+                        <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 0.5rem 0; color: #059669;">
+                                        {% if data.student %}
+                                            {{ data.student.name }}
+                                        {% else %}
+                                            User #{{ data.enrollment.user_id }}
+                                        {% endif %}
+                                    </h4>
+                                    <p style="margin: 0; color: #6b7280;">
+                                        Enrolled in 
+                                        <strong>
+                                            {% if data.course %}
+                                                {{ data.course.name }}
+                                            {% else %}
+                                                Course #{{ data.enrollment.course_id }}
+                                            {% endif %}
+                                        </strong>
+                                    </p>
+                                    <small style="color: #6b7280;">
+                                        {{ data.enrollment.enrolled_at.strftime('%m/%d/%Y at %I:%M %p') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No recent enrollments.</p>
+                {% endif %}
+            </div>
+
+            <!-- Course Statistics -->
+            <div class="card">
+                <h2>Course Overview</h2>
+                {% if courses_with_stats %}
+                    <div style="display: grid; gap: 1rem;">
+                        {% for stats in courses_with_stats %}
+                        <div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 0.5rem 0; color: #059669;">
+                                        {{ stats.course.name }}
+                                    </h4>
+                                    <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">
+                                        {{ stats.course.description or 'No description' }}
+                                    </p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 600; color: #10b981;">
+                                        {{ stats.student_count }} students
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #6b7280;">
+                                        {{ stats.assignment_count }} assignments
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No courses available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="card">
+        <h2>System Status</h2>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+            <div>
+                <div style="font-size: 2rem;">✅</div>
+                <div style="font-weight: 600;">Authentication</div>
+                <div style="font-size: 0.8rem; color: #6b7280;">Operational</div>
+            </div>
+            <div>
+                <div style="font-size: 2rem;">✅</div>
+                <div style="font-weight: 600;">Database</div>
+                <div style="font-size: 0.8rem; color: #6b7280;">Connected</div>
+            </div>
+            <div>
+                <div style="font-size: 2rem;">✅</div>
+                <div style="font-weight: 600;">File System</div>
+                <div style="font-size: 0.8rem; color: #6b7280;">Ready</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

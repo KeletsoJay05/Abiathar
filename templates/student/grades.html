@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}My Grades - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>My Grades</h1>
+    
+    {% if submissions %}
+    <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--gray-light);">
+                    <th style="padding: 1rem; text-align: left;">Assignment</th>
+                    <th style="padding: 1rem; text-align: left;">Course</th>
+                    <th style="padding: 1rem; text-align: left;">Marks</th>
+                    <th style="padding: 1rem; text-align: left;">Percentage</th>
+                    <th style="padding: 1rem; text-align: left;">Feedback</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 1rem;">{{ submission.assignment.title }}</td>
+                    <td style="padding: 1rem;">
+                        {% if submission.assignment.course %}
+                            {{ submission.assignment.course.name }}
+                        {% else %}
+                            Course #{{ submission.assignment.course_id }}
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">{{ submission.marks }}/{{ submission.assignment.max_marks }}</td>
+                    <td style="padding: 1rem;">
+                        {% if submission.marks %}
+                            {{ ((submission.marks / submission.assignment.max_marks) * 100)|round(1) }}%
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">{{ submission.feedback or 'No feedback' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Grades Yet</h3>
+        <p>You haven't received any grades for your submissions yet.</p>
+        <a href="{{ url_for('student.assignments') }}" class="btn">View Assignments</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

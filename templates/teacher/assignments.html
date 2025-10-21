@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}My Assignments - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>My Assignments</h1>
+    
+    {% if assignments %}
+    <div style="display: grid; gap: 1rem;">
+        {% for assignment in assignments %}
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <h3 style="color: var(--emerald-dark); margin-bottom: 0.5rem;">{{ assignment.title }}</h3>
+                    <p><strong>Course:</strong> 
+                        {% if assignment.course %}
+                            {{ assignment.course.name }}
+                        {% else %}
+                            Course #{{ assignment.course_id }}
+                        {% endif %}
+                    </p>
+                    <p><strong>Due Date:</strong> {{ assignment.due_date.strftime('%B %d, %Y') }}</p>
+                    <p><strong>Max Marks:</strong> {{ assignment.max_marks }}</p>
+                    {% if assignment.description %}
+                    <p><strong>Description:</strong> {{ assignment.description }}</p>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-direction: column; min-width: 200px;">
+                    <a href="{{ url_for('teacher.view_submissions', assignment_id=assignment.id) }}" 
+                       class="btn" 
+                       style="text-decoration: none; display: block; text-align: center;">
+                        📋 View Submissions ({{ assignment.submissions|length }})
+                    </a>
+                    <button class="btn" style="background: var(--gray-light); color: var(--black);">Edit</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Assignments Yet</h3>
+        <p>Create your first assignment to get started.</p>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn">Create Assignment</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+// Debug: Check if links are working
+document.addEventListener('DOMContentLoaded', function() {
+    const links = document.querySelectorAll('a[href*="view_submissions"]');
+    console.log('Found submission links:', links.length);
+    
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            console.log('Clicked submission link:', this.href);
+        });
+    });
+});
+</script>
+
+<style>
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+a.btn {
+    text-decoration: none !important;
+    color: white !important;
+}
+</style>
+{% endblock %}

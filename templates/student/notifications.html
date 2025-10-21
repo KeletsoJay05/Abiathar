@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}My Notifications - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+        <div>
+            <h1>My Notifications</h1>
+            <p style="color: var(--gray);">Stay updated with your course activities</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <form method="POST" action="{{ url_for('student.mark_all_notifications_read') }}" id="markAllForm" style="display: inline;">
+                <button type="submit" class="btn" style="background: var(--gray-light); color: var(--black);">
+                    Mark All as Read
+                </button>
+            </form>
+            <a href="{{ url_for('student.dashboard') }}" class="btn" style="background: var(--gray-light); color: var(--black);">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if notifications %}
+    <div class="card">
+        <div style="display: grid; gap: 0.5rem;">
+            {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}" 
+                 data-notification-id="{{ notification.id }}"
+                 style="cursor: pointer; padding: 1rem; border-radius: 6px; border: 1px solid #e5e7eb; margin-bottom: 0.5rem; transition: background-color 0.2s;"
+                 onclick="markAsRead('{{ notification.id }}', this)">
+                
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                    <div style="font-weight: 600; color: var(--black);">
+                        {% if notification.notification_type == 'assignment' %}
+                            📝 
+                        {% elif notification.notification_type == 'grade' %}
+                            ✅ 
+                        {% elif notification.notification_type == 'material' %}
+                            📚 
+                        {% else %}
+                            🔔 
+                        {% endif %}
+                        {{ notification.title }}
+                    </div>
+                    {% if not notification.is_read %}
+                    <span style="background: var(--emerald); color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">
+                        New
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div style="color: var(--gray); margin-bottom: 0.5rem;">{{ notification.message }}</div>
+                <div style="font-size: 0.8rem; color: var(--gray);">
+                    {{ notification.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Notifications</h3>
+        <p>You don't have any notifications yet.</p>
+        <p style="color: var(--gray); font-size: 0.9rem; margin-top: 0.5rem;">
+            You'll get notifications when teachers post new assignments, grade your work, or add lecture materials.
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function markAsRead(notificationId, element) {
+    fetch(`/student/notifications/mark-read/${notificationId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              element.classList.remove('unread');
+              element.style.backgroundColor = '';
+              element.style.borderLeft = '1px solid #e5e7eb';
+              
+              // Remove the "New" badge
+              const badge = element.querySelector('span');
+              if (badge) {
+                  badge.remove();
+              }
+              
+              // Update notification count in navbar
+              updateNotificationCount();
+          }
+      });
+}
+
+function updateNotificationCount() {
+    fetch('/student/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const notificationCount = document.getElementById('notificationCount');
+            if (data.count > 0) {
+                notificationCount.textContent = data.count;
+                notificationCount.style.display = 'flex';
+            } else {
+                notificationCount.style.display = 'none';
+            }
+        });
+}
+
+// Handle mark all as read form submission
+document.getElementById('markAllForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    fetch('/student/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              // Reload the page to show all notifications as read
+              location.reload();
+          }
+      });
+});
+</script>
+
+<style>
+.notification-item.unread {
+    background-color: #f0fdf4 !important;
+    border-left: 4px solid var(--emerald) !important;
+}
+
+.notification-item:hover {
+    background-color: var(--gray-light) !important;
+}
+</style>
+{% endblock %}

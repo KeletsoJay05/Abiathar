@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Course Materials - {{ course.name }} - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+        <div>
+            <h1>Course Materials: {{ course.name }}</h1>
+            <p style="color: var(--gray);">Manage lecture materials and resources</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <a href="{{ url_for('teacher.upload_material', course_id=course.id) }}" class="btn">
+                📤 Upload New Material
+            </a>
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn" style="background: var(--gray-light); color: var(--black);">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if materials %}
+    <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--gray-light);">
+                    <th style="padding: 1rem; text-align: left;">Title</th>
+                    <th style="padding: 1rem; text-align: left;">Type</th>
+                    <th style="padding: 1rem; text-align: left;">Week</th>
+                    <th style="padding: 1rem; text-align: left;">Uploaded</th>
+                    <th style="padding: 1rem; text-align: left;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for material in materials %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 1.2rem;">
+                                {% if material.file_type == 'pdf' %}📄
+                                {% elif material.file_type == 'video' %}🎥
+                                {% elif material.file_type == 'image' %}🖼️
+                                {% elif material.file_type == 'word' %}📝
+                                {% elif material.file_type == 'powerpoint' %}📊
+                                {% elif material.file_type == 'audio' %}🎵
+                                {% elif material.file_type == 'archive' %}📦
+                                {% elif material.file_type == 'link' %}🔗
+                                {% else %}📎{% endif %}
+                            </span>
+                            <div>
+                                <strong>{{ material.title }}</strong>
+                                {% if material.description %}
+                                <br><small style="color: var(--gray);">{{ material.description }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 1rem; text-transform: capitalize;">{{ material.file_type }}</td>
+                    <td style="padding: 1rem;">
+                        {% if material.week_number %}
+                        Week {{ material.week_number }}
+                        {% else %}
+                        <span style="color: var(--gray);">General</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1rem;">{{ material.created_at.strftime('%m/%d/%Y') }}</td>
+                    <td style="padding: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            {% if material.file_type != 'link' %}
+                            <a href="{{ url_for('teacher.download_material', material_id=material.id) }}" 
+                               class="btn" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                                Download
+                            </a>
+                            <!-- Add to teacher/course_materials.html near other action buttons -->
+                          
+    💬 Course Forum
+                        </a>    
+                            {% else %}
+                            <a href="{{ material.file_path }}" target="_blank" 
+                               class="btn" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                                Visit Link
+                            </a>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('teacher.delete_material', material_id=material.id) }}" 
+                                  style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this material?');">
+                                <button type="submit" class="btn" style="background: #dc2626; padding: 0.5rem 1rem; font-size: 0.8rem;">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Materials Yet</h3>
+        <p>Upload your first lecture material to get started.</p>
+        <a href="{{ url_for('teacher.upload_material', course_id=course.id) }}" class="btn">Upload Material</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

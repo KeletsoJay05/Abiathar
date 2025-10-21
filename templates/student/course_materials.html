@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Course Materials - {{ course.name }} - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 2rem;">
+        <div>
+            <h1>Course Materials: {{ course.name }}</h1>
+            <p style="color: var(--gray);">Access lecture materials and resources</p>
+        </div>
+        <a href="{{ url_for('student.dashboard') }}" class="btn" style="background: var(--gray-light); color: var(--black);">
+            ← Dashboard
+        </a>
+    </div>
+
+    {% if materials_by_week %}
+    <div style="display: grid; gap: 2rem;">
+        {% for week, materials in materials_by_week.items() %}
+        <div class="card">
+            <h2 style="color: var(--emerald-dark); margin-bottom: 1rem; border-bottom: 2px solid var(--emerald); padding-bottom: 0.5rem;">
+                {% if week == "General" %}
+                📚 General Materials
+                {% else %}
+                🗓️ Week {{ week }}
+                {% endif %}
+            </h2>
+            
+            <div style="display: grid; gap: 1rem;">
+                {% for material in materials %}
+                <div style="border: 1px solid #e5e7eb; padding: 1.5rem; border-radius: 8px; transition: all 0.3s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                                <span style="font-size: 1.5rem;">
+                                    {% if material.file_type == 'pdf' %}📄
+                                    {% elif material.file_type == 'video' %}🎥
+                                    {% elif material.file_type == 'image' %}🖼️
+                                    {% elif material.file_type == 'word' %}📝
+                                    {% elif material.file_type == 'powerpoint' %}📊
+                                    {% elif material.file_type == 'audio' %}🎵
+                                    {% elif material.file_type == 'archive' %}📦
+                                    {% elif material.file_type == 'link' %}🔗
+                                    {% else %}📎{% endif %}
+                                </span>
+                                <h3 style="margin: 0; color: var(--emerald-dark);">{{ material.title }}</h3>
+                            </div>
+                            
+                            {% if material.description %}
+                            <p style="color: var(--gray); margin-bottom: 1rem;">{{ material.description }}</p>
+                            {% endif %}
+                            
+                            <div style="display: flex; gap: 2rem; font-size: 0.9rem; color: var(--gray);">
+                                <span>Type: <strong style="text-transform: capitalize;">{{ material.file_type }}</strong></span>
+                                <span>Uploaded: {{ material.created_at.strftime('%b %d, %Y') }}</span>
+                                {% if material.teacher %}
+                                <span>By: {{ material.teacher.name }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div style="min-width: 120px; text-align: right;">
+                            {% if material.file_type == 'link' %}
+                            <a href="{{ material.file_path }}" target="_blank" class="btn">
+                                🔗 Visit Link
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('student.download_material', material_id=material.id) }}" class="btn">
+                                📥 Download
+                            </a>
+                            <!-- Add to student/course_materials.html near other action buttons -->
+                          
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Materials Available</h3>
+        <p>No lecture materials have been published for this course yet.</p>
+        <a href="{{ url_for('student.dashboard') }}" class="btn">Back to Dashboard</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+</style>
+{% endblock %}

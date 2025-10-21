@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Assignment - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="max-width: 600px; margin: 0 auto;">
+        <h1>Submit Assignment</h1>
+        
+        {% if existing_submission %}
+        <div class="card">
+            <div style="text-align: center; padding: 2rem;">
+                <h3 style="color: var(--emerald); margin-bottom: 1rem;">📤 Already Submitted</h3>
+                <p>You have already submitted this assignment.</p>
+                <div style="background: var(--gray-light); padding: 1rem; border-radius: 5px; margin: 1rem 0;">
+                    <p><strong>Status:</strong> 
+                        {% if existing_submission.status == 'graded' %}
+                            <span style="color: var(--emerald); font-weight: bold;">
+                                ✅ Graded - {{ existing_submission.marks }}/{{ assignment.max_marks }}
+                            </span>
+                        {% else %}
+                            <span style="color: orange; font-weight: bold;">
+                                ⏳ Submitted - Awaiting Grade
+                            </span>
+                        {% endif %}
+                    </p>
+                    {% if existing_submission.feedback %}
+                    <p><strong>Teacher Feedback:</strong> {{ existing_submission.feedback }}</p>
+                    {% endif %}
+                </div>
+                {% if existing_submission.file_path %}
+                <a href="{{ url_for('student.download_submission', submission_id=existing_submission.id) }}" class="btn">
+                    📥 Download My Submission
+                </a>
+                {% endif %}
+                <a href="{{ url_for('student.assignments') }}" class="btn" style="background: var(--gray-light); color: var(--black); margin-left: 0.5rem;">
+                    ← Back to Assignments
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <h2 style="color: var(--emerald-dark); margin-bottom: 1rem;">{{ assignment.title }}</h2>
+            
+            <!-- Assignment Details -->
+            <div style="background: var(--gray-light); padding: 1.5rem; border-radius: 8px; margin: 1rem 0; border-left: 4px solid var(--emerald);">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div>
+                        <strong>📚 Course:</strong><br>
+                        {% if assignment.course %}
+                            {{ assignment.course.name }}
+                        {% else %}
+                            Course #{{ assignment.course_id }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <strong>📅 Due Date:</strong><br>
+                        {{ assignment.due_date.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+                <div>
+                    <strong>🎯 Max Marks:</strong> {{ assignment.max_marks }}
+                </div>
+                {% if assignment.description %}
+                <div style="margin-top: 1rem;">
+                    <strong>📝 Description:</strong><br>
+                    {{ assignment.description }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Submission Form -->
+            <form method="POST" action="{{ url_for('student.submit_assignment', assignment_id=assignment.id) }}" enctype="multipart/form-data">
+                <!-- File Upload -->
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        📎 Upload Your Work *
+                    </label>
+                    <input type="file" name="submission_file" class="form-input" 
+                           accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.zip,.ppt,.pptx" 
+                           required
+                           onchange="previewFileName(this)">
+                    <div id="filePreview" style="margin-top: 0.5rem; display: none;">
+                        <span style="color: var(--emerald); font-weight: 600;">Selected: </span>
+                        <span id="fileName"></span>
+                    </div>
+                    <small style="color: var(--gray); display: block; margin-top: 0.5rem;">
+                        ✅ Allowed: PDF, DOC, DOCX, TXT, JPG, PNG, GIF, ZIP, PPT (Max 16MB)
+                    </small>
+                </div>
+                
+                <!-- Additional Notes -->
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        💬 Additional Notes (Optional)
+                    </label>
+                    <textarea name="notes" class="form-input" rows="3" 
+                              placeholder="Any additional information for your teacher... (e.g., special instructions, questions, etc.)"></textarea>
+                </div>
+
+                <!-- Form Actions -->
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn" style="flex: 1;">
+                        🚀 Submit Assignment
+                    </button>
+                    <a href="{{ url_for('student.assignments') }}" class="btn" 
+                       style="background: var(--gray-light); color: var(--black);">
+                        ❌ Cancel
+                    </a>
+                </div>
+            </form>
+
+            <!-- Important Notes -->
+            <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 1rem; margin-top: 1.5rem;">
+                <strong>💡 Important:</strong>
+                <ul style="margin: 0.5rem 0 0 1rem; padding: 0;">
+                    <li>Make sure your file is correct before submitting</li>
+                    <li>You cannot edit or resubmit after submission</li>
+                    <li>Submit before the due date to avoid penalties</li>
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function previewFileName(input) {
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    
+    if (input.files.length > 0) {
+        fileName.textContent = input.files[0].name;
+        filePreview.style.display = 'block';
+    } else {
+        filePreview.style.display = 'none';
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Please select a file to submit.');
+        return false;
+    }
+    
+    const file = fileInput.files[0];
+    const fileSize = file.size / (1024 * 1024); // MB
+    
+    if (fileSize > 16) {
+        e.preventDefault();
+        alert('File size exceeds 16MB limit. Please choose a smaller file.');
+        return false;
+    }
+});
+</script>
+
+<style>
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+    border-color: var(--emerald);
+    outline: none;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+</style>
+{% endblock %}

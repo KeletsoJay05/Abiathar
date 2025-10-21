@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }} Students - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ course.name }} - Enrolled Students</h1>
+    
+    {% if students %}
+    <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--gray-light);">
+                    <th style="padding: 1rem; text-align: left;">Student Number</th>
+                    <th style="padding: 1rem; text-align: left;">Name</th>
+                    <th style="padding: 1rem; text-align: left;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 1rem;">{{ student.student_number }}</td>
+                    <td style="padding: 1rem;">{{ student.name }}</td>
+                    <td style="padding: 1rem;">
+                        <button class="btn">View Progress</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Students Enrolled</h3>
+        <p>No students are currently enrolled in this course.</p>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top: 1rem;">
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %}

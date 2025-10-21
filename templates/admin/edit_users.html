@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Edit User - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Edit User</h1>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('admin.user_management') }}" style="color: #10b981; text-decoration: none;">← Back to User Management</a>
+    </div>
+
+    <div class="card">
+        <form method="POST" action="{{ url_for('admin.edit_user', user_id=user.id) }}">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Name:</label>
+                <input type="text" name="name" value="{{ user.name }}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Username:</label>
+                <input type="text" name="username" value="{{ user.username or '' }}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Student Number:</label>
+                <input type="text" name="student_number" value="{{ user.student_number or '' }}" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">Role:</label>
+                <select name="role" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                    <option value="student" {% if user.role == 'student' %}selected{% endif %}>Student</option>
+                    <option value="teacher" {% if user.role == 'teacher' %}selected{% endif %}>Teacher</option>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600;">New Password (Leave blank to keep current):</label>
+                <input type="password" name="password" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Update User</button>
+                <a href="{{ url_for('admin.user_management') }}" style="background: #f3f4f6; color: #1f2937; padding: 10px 20px; border: none; border-radius: 5px; text-decoration: none; display: inline-block;">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

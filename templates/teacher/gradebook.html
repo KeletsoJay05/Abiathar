@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Gradebook - {{ course.name }} - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 2rem;">
+        <div>
+            <h1>Gradebook: {{ course.name }}</h1>
+            <p style="color: var(--gray);">Track student progress and grades</p>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            <button onclick="exportGradebook()" class="btn">📊 Export Grades</button>
+            <a href="{{ url_for('teacher.dashboard') }}" class="btn" style="background: var(--gray-light); color: var(--black);">
+                ← Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if assignments %}
+    <div class="card">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                <thead>
+                    <tr style="background: var(--gray-light);">
+                        <th style="padding: 1rem; text-align: left; border: 1px solid #ddd; min-width: 150px;">
+                            Student
+                        </th>
+                        {% for assignment in assignments %}
+                        <th style="padding: 1rem; text-align: center; border: 1px solid #ddd; min-width: 100px;" title="{{ assignment.title }}">
+                            <div style="font-weight: 600; font-size: 0.9rem;">A{{ loop.index }}</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">/{{ assignment.max_marks }}</div>
+                        </th>
+                        {% endfor %}
+                        <th style="padding: 1rem; text-align: center; border: 1px solid #ddd; min-width: 100px; background: var(--emerald-light);">
+                            <div style="font-weight: 600;">Average</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">%</div>
+                        </th>
+                        <th style="padding: 1rem; text-align: center; border: 1px solid #ddd; min-width: 80px;">
+                            <div style="font-weight: 600;">Graded</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">/{{ assignments|length }}</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student_data in gradebook_data %}
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 1rem; border: 1px solid #ddd;">
+                            <strong>{{ student_data.student.name }}</strong><br>
+                            <small style="color: var(--gray);">{{ student_data.student.student_number }}</small>
+                        </td>
+                        
+                        {% for grade in student_data.grades %}
+                        <td style="padding: 0.5rem; text-align: center; border: 1px solid #ddd; vertical-align: middle;">
+                            {% if grade.marks is not none %}
+                                {% set percentage = (grade.marks / grade.assignment.max_marks) * 100 %}
+                                <div style="font-weight: 600; font-size: 0.9rem;">
+                                    {{ "%.1f"|format(grade.marks) }}
+                                </div>
+                                {% set grade_class = 'grade-high' if percentage >= 80 else ('grade-medium' if percentage >= 60 else 'grade-low') %}
+                                <div style="font-size: 0.8rem;" class="{{ grade_class }}">
+                                    {{ "%.1f"|format(percentage) }}%
+                                </div>
+                                {% if grade.submission and grade.submission.feedback %}
+                                <div style="margin-top: 0.25rem;">
+                                    <button onclick="showFeedback('{{ grade.submission.id }}')" 
+                                            style="background: none; border: none; color: var(--emerald); cursor: pointer; font-size: 0.8rem;" 
+                                            title="View Feedback">
+                                        💬
+                                    </button>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: var(--gray); font-size: 0.9rem;">-</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        
+                        <td style="padding: 1rem; text-align: center; border: 1px solid #ddd; font-weight: 600; background: #f0fdf4;">
+                            {{ student_data.average }}%
+                        </td>
+                        {% set graded_class = 'graded-complete' if student_data.graded_count == assignments|length else ('graded-partial' if student_data.graded_count > 0 else 'graded-none') %}
+                        <td style="padding: 1rem; text-align: center; border: 1px solid #ddd;">
+                            <span class="{{ graded_class }}" style="font-weight: 600;">
+                                {{ student_data.graded_count }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Assignment Legend -->
+    <div class="card" style="margin-top: 1rem;">
+        <h3 style="margin-bottom: 1rem;">Assignment Legend</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            {% for assignment in assignments %}
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="font-weight: 600; color: var(--emerald);">A{{ loop.index }}</div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.9rem; font-weight: 500;">{{ assignment.title }}</div>
+                    <div style="font-size: 0.8rem; color: var(--gray);">
+                        Due: {{ assignment.due_date.strftime('%m/%d') }} | /{{ assignment.max_marks }}
+                    </div>
+                </div>
+                <a href="{{ url_for('teacher.view_submissions', assignment_id=assignment.id) }}" 
+                   class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">
+                    Grade
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% else %}
+    <div class="card" style="text-align: center; padding: 3rem;">
+        <h3 style="color: var(--gray); margin-bottom: 1rem;">No Assignments</h3>
+        <p>No assignments have been created for this course yet.</p>
+        <a href="{{ url_for('teacher.dashboard') }}" class="btn">Create Assignment</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="max-width: 500px; margin: 2rem; max-height: 80vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+            <h3>Feedback</h3>
+            <button onclick="closeFeedback()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+        </div>
+        <div id="feedbackContent"></div>
+    </div>
+</div>
+
+<script>
+function exportGradebook() {
+    alert('Export functionality will be implemented in the next update!');
+}
+
+function showFeedback(submissionId) {
+    // In a real implementation, this would fetch feedback from the server
+    // For now, we'll show a placeholder
+    document.getElementById('feedbackContent').innerHTML = `
+        <p><strong>Feedback for submission:</strong></p>
+        <div style="background: var(--gray-light); padding: 1rem; border-radius: 5px; margin: 1rem 0;">
+            <p>This is where detailed feedback would appear for the student's submission.</p>
+            <p>In the next update, this will show the actual teacher feedback.</p>
+        </div>
+    `;
+    document.getElementById('feedbackModal').style.display = 'flex';
+}
+
+function closeFeedback() {
+    document.getElementById('feedbackModal').style.display = 'none';
+}
+
+// Close modal when clicking outside
+document.getElementById('feedbackModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeFeedback();
+    }
+});
+</script>
+
+<style>
+:root {
+    --emerald-light: #d1fae5;
+    --emerald: #10b981;
+}
+
+th {
+    font-weight: 600;
+}
+
+td {
+    vertical-align: top;
+}
+
+.btn {
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Grade color classes (avoid inline Jinja in CSS) */
+.grade-high {
+    color: var(--emerald);
+}
+.grade-medium {
+    color: orange;
+}
+.grade-low {
+    color: #dc2626;
+}
+
+/* Graded count color classes */
+.graded-complete {
+    color: var(--emerald);
+}
+.graded-partial {
+    color: orange;
+}
+.graded-none {
+    color: var(--gray);
+}
+</style>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>User Management</h1>
+    
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('admin.dashboard') }}">← Back to Dashboard</a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div>
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}" style="margin-bottom: 1rem;">{{ message }}</div>
+            {% endfor %}    
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Create User Form -->
+    <div class="card">
+        <h2>Create New User</h2>
+        <form method="POST" action="{{ url_for('admin.create_user') }}">
+            <div style="margin-bottom: 15px;">
+                <div>
+                    <label>Username (Optional):</label>
+                    <input type="text" name="username" style="width: 100%; padding: 8px; margin: 5px 0;">
+                </div>
+                <div>
+                    <label>Student Number (Optional):</label>
+                    <input type="text" name="student_number" style="width: 100%; padding: 8px; margin: 5px 0;">
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div>
+                    <label>Full Name *:</label>
+                    <input type="text" name="name" style="width: 100%; padding: 8px; margin: 5px 0;" required>
+                </div>
+                <div>
+                    <label>Role *:</label>
+                    <select name="role" style="width: 100%; padding: 8px; margin: 5px 0;" required>
+                        <option value="">Select Role</option>
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Password:</label>
+                    <input type="password" name="password" style="width: 100%; padding: 8px; margin: 5px 0;" placeholder="Default: password123">
+                </div>
+            </div>
+            
+            <button type="submit" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px;">Create User</button>
+        </form>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <h2>All Users ({{ users|length }})</h2>
+        {% if users %}
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f3f4f6;">
+                    <th style="padding: 10px; text-align: left;">ID</th>
+                    <th style="padding: 10px; text-align: left;">Name</th>
+                    <th style="padding: 10px; text-align: left;">Username</th>
+                    <th style="padding: 10px; text-align: left;">Student Number</th>
+                    <th style="padding: 10px; text-align: left;">Role</th>
+                    <th style="padding: 10px; text-align: left;">Created</th>
+                    <th style="padding: 10px; text-align: left;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 10px;">{{ user.id }}</td>
+                    <td style="padding: 10px;"><strong>{{ user.name }}</strong></td>
+                    <td style="padding: 10px;">{{ user.username or '-' }}</td>
+                    <td style="padding: 10px;">{{ user.student_number or '-' }}</td>
+                    <td style="padding: 10px;">
+                        {% if user.role == 'student' %}
+                            <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">Student</span>
+                        {% elif user.role == 'teacher' %}
+                            <span style="background: #f59e0b; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">Teacher</span>
+                        {% else %}
+                            <span style="background: #8b5cf6; color: white; padding: 4px 8px; border-radius: 10px; font-size: 12px;">Admin</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 10px;">{{ user.created_at.strftime('%m/%d/%Y') }}</td>
+                    <td style="padding: 10px;">
+                        <div style="display: flex; gap: 5px;">
+                            {% if user.id != current_user.id %}
+                            <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}" 
+                                  style="display: inline;" onsubmit="return confirm('Delete user {{ user.name }}?');">
+                                <button type="submit" style="background: #dc2626; color: white; padding: 5px 10px; border: none; border-radius: 3px; font-size: 12px;">
+                                    Delete
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No users found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

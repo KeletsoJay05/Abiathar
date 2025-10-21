@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Material - {{ course.name }} - Abiathar EduConnect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div style="max-width: 600px; margin: 0 auto;">
+        <h1>Upload Lecture Material</h1>
+        <p style="color: var(--gray); margin-bottom: 2rem;">Course: {{ course.name }}</p>
+        
+        <div class="card">
+            <form method="POST" action="{{ url_for('teacher.upload_material', course_id=course.id) }}" enctype="multipart/form-data">
+                <!-- Basic Information -->
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        📝 Material Title *
+                    </label>
+                    <input type="text" name="title" class="form-input" placeholder="e.g., Introduction to Calculus" required>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        📋 Description (Optional)
+                    </label>
+                    <textarea name="description" class="form-input" rows="3" placeholder="Brief description of this material..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        🗓️ Week Number (Optional)
+                    </label>
+                    <input type="number" name="week_number" class="form-input" placeholder="e.g., 1, 2, 3..." min="1" max="20">
+                </div>
+                
+                <!-- File Upload Section -->
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        📎 Upload File
+                    </label>
+                    <input type="file" name="material_file" class="form-input" 
+                           accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.mp4,.mov,.avi,.zip,.rar,.mp3,.wav"
+                           onchange="toggleLinkField()">
+                    <small style="color: var(--gray); display: block; margin-top: 0.5rem;">
+                        ✅ Allowed: PDF, Word, PowerPoint, Images, Videos, Audio, Archives (Max 16MB)
+                    </small>
+                </div>
+                
+                <!-- OR External Link -->
+                <div style="text-align: center; margin: 1rem 0; color: var(--gray);">OR</div>
+                
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">
+                        🔗 External Link
+                    </label>
+                    <input type="url" name="external_link" class="form-input" placeholder="https://..." id="externalLink">
+                    <small style="color: var(--gray); display: block; margin-top: 0.5rem;">
+                        ✅ YouTube, Google Drive, OneDrive, or any web link
+                    </small>
+                </div>
+                
+                <!-- Form Actions -->
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn" style="flex: 1;">
+                        🚀 Upload Material
+                    </button>
+                    <a href="{{ url_for('teacher.course_materials', course_id=course.id) }}" class="btn" 
+                       style="background: var(--gray-light); color: var(--black);">
+                        ❌ Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleLinkField() {
+    const fileInput = document.querySelector('input[type="file"]');
+    const linkInput = document.getElementById('externalLink');
+    
+    if (fileInput.files.length > 0) {
+        linkInput.disabled = true;
+        linkInput.placeholder = "Disabled when file is selected";
+    } else {
+        linkInput.disabled = false;
+        linkInput.placeholder = "https://...";
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', toggleLinkField);
+</script>
+
+<style>
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus {
+    border-color: var(--emerald);
+    outline: none;
+}
+
+.form-input:disabled {
+    background-color: #f9fafb;
+    color: #6b7280;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}
