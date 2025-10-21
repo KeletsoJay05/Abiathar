@@ -41,15 +41,28 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(teacher_bp)
 app.register_blueprint(student_bp)
 
-# 🚨 REMOVE THIS ENTIRE ROUTE FOR SECURITY:
-# @app.route('/find-students')
-# def find_students():
-#     from models import User
-#     students = User.query.filter_by(role='student').all()
-#     result = "<h1>Student IDs</h1>"
-#     for student in students:
-#         result += f"<p>ID: {student.id} | Student Number: {student.student_number} | Name: {student.name}</p>"
-#     return result
+@app.route('/admin/force-delete-user/<int:user_id>')
+@login_required
+def force_delete_user(user_id):
+    if not current_user.is_admin:
+        return "Admin access required", 403
+        
+    try:
+        from models import Enrollment, Notification
+        user = User.query.get_or_404(user_id)
+        
+        # Delete all related data
+        Enrollment.query.filter_by(user_id=user.id).delete()
+        Notification.query.filter_by(user_id=user.id).delete()
+        
+        # Delete user
+        db.session.delete(user)
+        db.session.commit()
+        
+        return f"✅ User {user_id} and all related data force-deleted successfully"
+    except Exception as e:
+        db.session.rollback()
+        return f"❌ Error: {str(e)}"
 
 @app.route('/')
 def home():
@@ -87,4 +100,5 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     setup_database()
     print(f"🎓 Abiathar EduConnect Running on port {port}")
+
     app.run(host='0.0.0.0', port=port, debug=False)  # ← debug=False for production
