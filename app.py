@@ -41,29 +41,6 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(teacher_bp)
 app.register_blueprint(student_bp)
 
-@app.route('/admin/force-delete-user/<int:user_id>')
-@login_required
-def force_delete_user(user_id):
-    if not current_user.is_admin:
-        return "Admin access required", 403
-        
-    try:
-        from models import Enrollment, Notification
-        user = User.query.get_or_404(user_id)
-        
-        # Delete all related data
-        Enrollment.query.filter_by(user_id=user.id).delete()
-        Notification.query.filter_by(user_id=user.id).delete()
-        
-        # Delete user
-        db.session.delete(user)
-        db.session.commit()
-        
-        return f"✅ User {user_id} and all related data force-deleted successfully"
-    except Exception as e:
-        db.session.rollback()
-        return f"❌ Error: {str(e)}"
-
 @app.route('/')
 def home():
     return redirect('/login')
